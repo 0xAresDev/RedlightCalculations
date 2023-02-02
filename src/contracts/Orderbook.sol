@@ -40,6 +40,8 @@ contract OrderBook{
     SellOrder[] _sellOrders;
 
     BuyOrder[] fullfilledBuy;
+    SellOrder[] fullfilledSell;
+
 
 
     function getBuyIndex(uint256 price) internal view returns(uint256 index){
@@ -69,12 +71,32 @@ contract OrderBook{
     }
 
 
+    function checkAndFullfillBuys() internal{
+        BuyOrder memory current = buyOrders[0];
+        uint i = sellOrders.length;
+        while(i>=0 && buyOrders[0].amount!=0){
+            if(sellOrders[i].minPrice >= current.maxPrice){
+                if(sellOrders[i].amount <= current.amount){
+                    buyOrders[0].amount -= sellOrders[i].amount;
+                    current = buyOrders[0];
+                    fullfilledSell.push(sellOrders[i]);
+                    delete sellOrders[i];
+                }else{
+
+                }
+            }
+        }
+    }
 
     function addBuyOrder(address _buyer, uint256 _maxPrice, uint256 _amount) external onlyBridge {
         uint index = getBuyIndex(_maxPrice);
         createNewBuyArray(_buyer, _maxPrice, _amount, index);
+        if(index==0){
+
+        }
 
     }
+
 
 
 }
