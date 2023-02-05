@@ -70,9 +70,20 @@ contract OrderBook{
 
     }
 
+    function removeBuyOrder(uint index) internal{
+        if (index >= buyOrders.length) return;
+
+        for (uint i = index; i<buyOrders.length-1; i++){
+            buyOrders[i] = buyOrders[i+1];
+        }
+        delete buyOrders[buyOrders.length-1];
+        buyOrders.pop();
+        
+    }
 
     function checkAndFullfillBuys() internal{
         BuyOrder memory current = buyOrders[0];
+        //uint startingAmount = current.amount;
         uint i = sellOrders.length;
         while(i>=0 && buyOrders[0].amount!=0){
             if(sellOrders[i].minPrice >= current.maxPrice){
@@ -82,9 +93,18 @@ contract OrderBook{
                     fullfilledSell.push(sellOrders[i]);
                     delete sellOrders[i];
                 }else{
-
+                    SellOrder memory tempSell = SellOrder(sellOrders[i].seller, sellOrders[i].minPrice, current.amount);
+                    sellOrders[i].amount -= current.amount;
+                    buyOrders[0].amount = 0;
+                    current = buyOrders[0];
+                    fullfilledSell.push(tempSell);
+                    delete tempSell;
                 }
             }
+
+        }
+        if(buyOrders[0].amount==0){
+            removeBuyOrder(0);
         }
     }
 
@@ -92,7 +112,7 @@ contract OrderBook{
         uint index = getBuyIndex(_maxPrice);
         createNewBuyArray(_buyer, _maxPrice, _amount, index);
         if(index==0){
-
+            checkAndFullfillBuys();
         }
 
     }
