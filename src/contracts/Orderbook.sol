@@ -199,14 +199,46 @@ contract OrderBook{
         
     }
 
-    function payOut(uint256 priceDif, uint256 amount) internal{
+    function payOutBuy(uint256 priceDif, uint256 amount, address _buyer) internal{
         
         //payout priceDif to buyer
-
+        sendDAI(_buyer, priceDif);
         // payout DAI to sellers and Bitcoin to buyer
 
         // DAI from fullFilledSell
+        for(uint i = 0; i<fullfilledSell.length; i++){
+
+            sendDAI(fullfilledSell[i].seller, fullfilledSell[i].minPrice*fullfilledSell[i].amount);
+
+        }
         // BTC amount from amount
+        sendBTC(_buyer, amount);
+    }
+
+    function sendDAI(address receiver, uint256 amount) internal{
+
+    }
+
+    function sendBTC(address receiver, uint256 amount) internal{
+
+    }
+    
+
+    function payOutSell(address _seller, uint _minPrice) internal{
+        // pay out BTC to buyer
+        // pay out DAI to seller
+        // pay out price difference to buyer
+        uint amount = 0;
+        //uint 
+        for(uint i = 0; i<fullfilledBuy.length; i++){
+            amount += fullfilledBuy[i].amount;
+            // price dif
+            sendDAI(fullfilledBuy[i].buyer, (fullfilledBuy[i].maxPrice-_minPrice)*fullfilledBuy[i].amount);
+            //BTC
+            sendBTC(fullfilledBuy[i].buyer, fullfilledBuy[i].amount);
+        }
+        // sell amount
+        sendDAI(_seller, amount*_minPrice);
     }
 
     function addBuyOrder(address _buyer, uint256 _maxPrice, uint256 _amount) external onlyBridge {
@@ -215,7 +247,7 @@ contract OrderBook{
         if(index==buyOrders.length-1){
             checkAndFullfillBuys();
             (uint256 priceDifference, uint256 amount) = calculatePriceDifferenceAndAmount(_maxPrice);
-            payOut(priceDifference, amount);
+            payOutBuy(priceDifference, amount, _buyer);
             // We could implement recursion here in case we want to increase the Max Price a buyer is willing to pay if he got the previous Bitcoins cheaper than his maxPrice
             delete fullfilledSell;
         }
@@ -227,10 +259,10 @@ contract OrderBook{
         createNewSellArray(_seller, _minPrice, _amount, index);
         if(index==sellOrders.length-1){
             checkAndFullfillSell();
-            (uint256 priceDifference, uint256 amount) = calculatePriceDifferenceAndAmount(_minPrice);
-            payOut(priceDifference, amount);
+            //(uint256 priceDifference, uint256 amount) = calculatePriceDifferenceAndAmount(_minPrice);
+            payOutSell(_seller, _minPrice);
             // We could implement recursion here in case we want to increase the Max Price a buyer is willing to pay if he got the previous Bitcoins cheaper than his maxPrice
-            delete fullfilledSell;
+            delete fullfilledBuy;
         }
 
     }
