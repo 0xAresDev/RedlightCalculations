@@ -115,17 +115,8 @@ contract OrderBook{
         buyOrders.pop();
         
     }
-
-    function removeSellOrder(uint index) internal{
-        if (index >= sellOrders.length) return;
-
-        for (uint i = index; i<sellOrders.length-1; i++){
-            sellOrders[i] = sellOrders[i+1];
-        }
-        delete sellOrders[buyOrders.length-1];
-        sellOrders.pop();
         
-    }
+    
 
     function checkAndFullfillBuys() internal{
         BuyOrder memory current = buyOrders[buyOrders.length-1];
