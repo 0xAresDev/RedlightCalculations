@@ -259,6 +259,32 @@ contract OrderBook{
     }
 
 
+    function closeSellOrder(address _seller) external onlyBridge {
+        uint256 index = 0;
+        for(uint i=0; i<sellOrders.length; i++){
+            if(sellOrders[i].seller==_seller){
+                index = i;
+            }
+        }
+        // potential reentracy attack
+        sendBTC(sellOrders[index].seller, sellOrders[index].amount);
+        removeSellOrder(index);
+    }
+
+
+    function closeBuyOrder(address _buyer) external onlyBridge {
+        uint256 index = 0;
+        for(uint i=0; i<buyOrders.length; i++){
+            if(buyOrders[i].buyer==_buyer){
+                index = i;
+            }
+        }
+        // potential reentracy attack
+        sendDAI(buyOrders[index].buyer, buyOrders[index].amount*buyOrders[index].maxPrice);
+        removeBuyOrder(index);
+    }
+
+
 
 }
 
