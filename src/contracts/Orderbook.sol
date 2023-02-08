@@ -273,9 +273,13 @@ contract OrderBook{
                 index = i;
             }
         }
-        // potential reentracy attack
-        sendBTC(sellOrders[index].seller, sellOrders[index].amount);
-        removeSellOrder(index);
+        
+        if(index==0 && sellOrders[0].seller!=_seller){}
+        else{
+            // potential reentracy attack
+            sendBTC(sellOrders[index].seller, sellOrders[index].amount);
+            removeSellOrder(index);
+        }
     }
 
 
@@ -286,9 +290,13 @@ contract OrderBook{
                 index = i;
             }
         }
-        // potential reentracy attack
-        sendDAI(buyOrders[index].buyer, buyOrders[index].amount*buyOrders[index].maxPrice);
-        removeBuyOrder(index);
+        if(index==0 && buyOrders[0].buyer!=_buyer){}
+        else{
+            // potential reentracy attack
+            sendDAI(buyOrders[index].buyer, buyOrders[index].amount*buyOrders[index].maxPrice);
+            removeBuyOrder(index);
+        }
+        
     }
 
     

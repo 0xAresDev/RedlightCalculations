@@ -35,6 +35,22 @@ def add_sell_order_debug(seller, min_price, amount):
     print(tx.events)
     return True
 
+def close_buy_order(buyer):
+    account = get_account(0)
+    order_book = OrderBook[-1]
+    tx = order_book.closeBuyOrder(buyer, {"from":account, "gas_limit":5000000, "allow_revert":True})
+    tx.wait(1)
+    print(tx.events)
+    return True
+
+def close_sell_order(seller):
+    account = get_account(0)
+    order_book = OrderBook[-1]
+    tx = order_book.closeSellOrder(seller, {"from":account, "gas_limit":5000000, "allow_revert":True})
+    tx.wait(1)
+    print(tx.events)
+    return True
+
 def main():
     for i in range(20):
         if random.randint(0, 100) > 50:
@@ -43,6 +59,10 @@ def main():
             add_sell_order(get_account(random.randint(0,9)), random.randint(1000,25000), random.randint(1,50))
     
     
+    close_buy_order(get_account(1))
+    close_buy_order(get_account(3))
+    close_sell_order(get_account(5))
+    close_sell_order(get_account(8))
     #add_buy_order(get_account(1), 15000, 1)
     #add_sell_order(get_account(2), 12000, 10)
     #add_buy_order(get_account(3), 10000, 20)
