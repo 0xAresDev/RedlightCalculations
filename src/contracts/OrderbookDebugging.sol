@@ -2,6 +2,10 @@
 pragma solidity ^0.8.10;
 
 
+
+// Basically a copy of the OrderBook code but here to debug, solidity needs better debug tools ASAP.
+// Maybe I should also start writing tests earlier
+
 struct BuyOrder{
     address buyer;
     uint256 maxPrice;
@@ -21,7 +25,7 @@ struct SellOrder{
  @author 0xAres
 */
 
-contract OrderBook{
+contract OrderBookDebug{
 
     address bridge;
 
@@ -44,6 +48,7 @@ contract OrderBook{
 
     event SendBTC(address receiver, uint256 amount);
     event SendDAI(address receiver, uint256 amount);
+    event DebuggerValue(uint256 value);
 
     function getBuyIndex(uint256 price) internal view returns(uint256 index){
         uint i = 0;
@@ -53,18 +58,19 @@ contract OrderBook{
             }
             i++;
         }
-        return(i+1);
+        return(buyOrders.length);
     }
 
-    function getSellIndex(uint256 price) internal view returns(uint256 index){
+    function getSellIndex(uint256 price) internal returns(uint256 index){
         uint i = 0;
+        emit DebuggerValue(sellOrders.length);
         while(i<sellOrders.length){
             if(price>=sellOrders[i].minPrice){
                 return(i);
             }
             i++;
         }
-        return(i+1);
+        return(sellOrders.length);
     }
 
     function createNewBuyArray(address _buyer, uint256 _maxPrice, uint256 _amount, uint256 index) internal{
@@ -85,7 +91,7 @@ contract OrderBook{
         for(uint i=0;i<index;i++){
             _sellOrders.push(sellOrders[i]);
         }
-        _sellOrders.push(SellOrder(_seller,_minPrice,_amount));
+        _sellOrders.push(SellOrder(_seller,_minPrice,_amount)); 
         for(uint i=index;i<sellOrders.length;i++){
             _sellOrders.push(sellOrders[i]);
         }
@@ -122,29 +128,32 @@ contract OrderBook{
     function checkAndFullfillBuys() internal{
         BuyOrder memory current = buyOrders[buyOrders.length-1];
         //uint startingAmount = current.amount;
-        uint i = sellOrders.length-1;
-        while(i>=0 && buyOrders[buyOrders.length-1].amount!=0){
-            if(sellOrders[i].minPrice <= current.maxPrice){
-                if(sellOrders[i].amount <= current.amount){
-                    buyOrders[buyOrders.length-1].amount -= sellOrders[i].amount;
-                    current = buyOrders[buyOrders.length-1];
-                    fullfilledSell.push(sellOrders[i]);
-                    delete sellOrders[i];
-                    sellOrders.pop();
-                }else{
-                    SellOrder memory tempSell = SellOrder(sellOrders[i].seller, sellOrders[i].minPrice, current.amount);
-                    sellOrders[i].amount -= current.amount;
-                    buyOrders[buyOrders.length-1].amount = 0;
-                    current = buyOrders[buyOrders.length-1];
-                    fullfilledSell.push(tempSell);
-                    delete tempSell;
+        if(sellOrders.length>0){
+            uint256 i = sellOrders.length-1;
+            while(i>=0 && buyOrders[buyOrders.length-1].amount!=0){
+                if(sellOrders[i].minPrice <= current.maxPrice){
+                    if(sellOrders[i].amount <= current.amount){
+                        buyOrders[buyOrders.length-1].amount -= sellOrders[i].amount;
+                        current = buyOrders[buyOrders.length-1];
+                        fullfilledSell.push(sellOrders[i]);
+                        delete sellOrders[i];
+                        sellOrders.pop();
+                    }else{
+                        SellOrder memory tempSell = SellOrder(sellOrders[i].seller, sellOrders[i].minPrice, current.amount);
+                        sellOrders[i].amount -= current.amount;
+                        buyOrders[buyOrders.length-1].amount = 0;
+                        current = buyOrders[buyOrders.length-1];
+                        fullfilledSell.push(tempSell);
+                        delete tempSell;
+                    }
                 }
-            }
-            i--;
+                if(i==0){break;}
+                i--;
 
-        }
-        if(buyOrders[buyOrders.length-1].amount==0){
-            removeBuyOrder(buyOrders.length-1);
+            }
+            if(buyOrders[buyOrders.length-1].amount==0){
+                removeBuyOrder(buyOrders.length-1);
+            }
         }
     }
 
@@ -152,29 +161,32 @@ contract OrderBook{
     function checkAndFullfillSell() internal{
         SellOrder memory current = sellOrders[sellOrders.length-1];
         //uint startingAmount = current.amount;
-        uint i = buyOrders.length-1;
-        while(i>=0 && sellOrders[sellOrders.length-1].amount!=0){
-            if(buyOrders[i].maxPrice >= current.minPrice){
-                if(buyOrders[i].amount <= current.amount){
-                    sellOrders[sellOrders.length-1].amount -= buyOrders[i].amount;
-                    current = sellOrders[sellOrders.length-1];
-                    fullfilledBuy.push(buyOrders[i]);
-                    delete buyOrders[i];
-                    buyOrders.pop();
-                }else{
-                    BuyOrder memory tempBuy = BuyOrder(buyOrders[i].buyer, buyOrders[i].maxPrice, current.amount);
-                    buyOrders[i].amount -= current.amount;
-                    sellOrders[sellOrders.length-1].amount = 0;
-                    current = sellOrders[sellOrders.length-1];
-                    fullfilledBuy.push(tempBuy);
-                    delete tempBuy;
+        if(buyOrders.length > 0){
+            uint i = buyOrders.length-1;
+            while(i>=0 && sellOrders[sellOrders.length-1].amount!=0){
+                if(buyOrders[i].maxPrice >= current.minPrice){
+                    if(buyOrders[i].amount <= current.amount){
+                        sellOrders[sellOrders.length-1].amount -= buyOrders[i].amount;
+                        current = sellOrders[sellOrders.length-1];
+                        fullfilledBuy.push(buyOrders[i]);
+                        delete buyOrders[i];
+                        buyOrders.pop();
+                    }else{
+                        BuyOrder memory tempBuy = BuyOrder(buyOrders[i].buyer, buyOrders[i].maxPrice, current.amount);
+                        buyOrders[i].amount -= current.amount;
+                        sellOrders[sellOrders.length-1].amount = 0;
+                        current = sellOrders[sellOrders.length-1];
+                        fullfilledBuy.push(tempBuy);
+                        delete tempBuy;
+                    }
                 }
-            }
-            i--;
+                if(i==0){break;}
+                i--;
 
-        }
-        if(sellOrders[sellOrders.length-1].amount==0){
-            removeSellOrder(sellOrders.length-1);
+            }
+            if(sellOrders[sellOrders.length-1].amount==0){
+                removeSellOrder(sellOrders.length-1);
+            }
         }
     }
 
@@ -233,10 +245,15 @@ contract OrderBook{
         sendDAI(_seller, amount*_minPrice);
     }
 
-    function addBuyOrder(address _buyer, uint256 _maxPrice, uint256 _amount) external onlyBridge {
+    function addBuyOrder(address _buyer, uint256 _maxPrice, uint256 _amount) external onlyBridge returns(uint256) {
         uint index = getBuyIndex(_maxPrice);
+        emit DebuggerValue(index);
+        uint256 _before = buyOrders.length;
         createNewBuyArray(_buyer, _maxPrice, _amount, index);
+        uint256 _after = buyOrders.length;
+        emit DebuggerValue(_after-_before);
         if(index==buyOrders.length-1){
+            emit DebuggerValue(99);
             checkAndFullfillBuys();
             (uint256 priceDifference, uint256 amount) = calculatePriceDifferenceAndAmount(_maxPrice);
             payOutBuy(priceDifference, amount, _buyer);
@@ -248,8 +265,13 @@ contract OrderBook{
 
     function addSellOrder(address _seller, uint256 _minPrice, uint256 _amount) external onlyBridge {
         uint index = getSellIndex(_minPrice);
+        emit DebuggerValue(index);
+        uint256 _before = sellOrders.length;
         createNewSellArray(_seller, _minPrice, _amount, index);
+        uint256 _after = sellOrders.length;
+        emit DebuggerValue(_after-_before);
         if(index==sellOrders.length-1){
+            emit DebuggerValue(99);
             checkAndFullfillSell();
             //(uint256 priceDifference, uint256 amount) = calculatePriceDifferenceAndAmount(_minPrice);
             payOutSell(_seller, _minPrice);
