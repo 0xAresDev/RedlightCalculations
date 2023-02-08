@@ -13,4 +13,4 @@ def deploy_OrderBook_debug():
     return order_book
 
 def main():
-    deploy_OrderBook_debug()
+    deploy_OrderBook()

@@ -53,7 +53,7 @@ contract OrderBook{
             }
             i++;
         }
-        return(i+1);
+        return(buyOrders.length);
     }
 
     function getSellIndex(uint256 price) internal view returns(uint256 index){
@@ -64,7 +64,7 @@ contract OrderBook{
             }
             i++;
         }
-        return(i+1);
+        return(sellOrders.length);
     }
 
     function createNewBuyArray(address _buyer, uint256 _maxPrice, uint256 _amount, uint256 index) internal{
@@ -122,29 +122,32 @@ contract OrderBook{
     function checkAndFullfillBuys() internal{
         BuyOrder memory current = buyOrders[buyOrders.length-1];
         //uint startingAmount = current.amount;
-        uint i = sellOrders.length-1;
-        while(i>=0 && buyOrders[buyOrders.length-1].amount!=0){
-            if(sellOrders[i].minPrice <= current.maxPrice){
-                if(sellOrders[i].amount <= current.amount){
-                    buyOrders[buyOrders.length-1].amount -= sellOrders[i].amount;
-                    current = buyOrders[buyOrders.length-1];
-                    fullfilledSell.push(sellOrders[i]);
-                    delete sellOrders[i];
-                    sellOrders.pop();
-                }else{
-                    SellOrder memory tempSell = SellOrder(sellOrders[i].seller, sellOrders[i].minPrice, current.amount);
-                    sellOrders[i].amount -= current.amount;
-                    buyOrders[buyOrders.length-1].amount = 0;
-                    current = buyOrders[buyOrders.length-1];
-                    fullfilledSell.push(tempSell);
-                    delete tempSell;
+        if(sellOrders.length>0){
+            uint i = sellOrders.length-1;
+            while(i>=0 && buyOrders[buyOrders.length-1].amount!=0){
+                if(sellOrders[i].minPrice <= current.maxPrice){
+                    if(sellOrders[i].amount <= current.amount){
+                        buyOrders[buyOrders.length-1].amount -= sellOrders[i].amount;
+                        current = buyOrders[buyOrders.length-1];
+                        fullfilledSell.push(sellOrders[i]);
+                        delete sellOrders[i];
+                        sellOrders.pop();
+                    }else{
+                        SellOrder memory tempSell = SellOrder(sellOrders[i].seller, sellOrders[i].minPrice, current.amount);
+                        sellOrders[i].amount -= current.amount;
+                        buyOrders[buyOrders.length-1].amount = 0;
+                        current = buyOrders[buyOrders.length-1];
+                        fullfilledSell.push(tempSell);
+                        delete tempSell;
+                    }
                 }
-            }
-            i--;
+                if(i==0){break;}
+                i--;
 
-        }
-        if(buyOrders[buyOrders.length-1].amount==0){
-            removeBuyOrder(buyOrders.length-1);
+            }
+            if(buyOrders[buyOrders.length-1].amount==0){
+                removeBuyOrder(buyOrders.length-1);
+            }
         }
     }
 
@@ -152,29 +155,32 @@ contract OrderBook{
     function checkAndFullfillSell() internal{
         SellOrder memory current = sellOrders[sellOrders.length-1];
         //uint startingAmount = current.amount;
-        uint i = buyOrders.length-1;
-        while(i>=0 && sellOrders[sellOrders.length-1].amount!=0){
-            if(buyOrders[i].maxPrice >= current.minPrice){
-                if(buyOrders[i].amount <= current.amount){
-                    sellOrders[sellOrders.length-1].amount -= buyOrders[i].amount;
-                    current = sellOrders[sellOrders.length-1];
-                    fullfilledBuy.push(buyOrders[i]);
-                    delete buyOrders[i];
-                    buyOrders.pop();
-                }else{
-                    BuyOrder memory tempBuy = BuyOrder(buyOrders[i].buyer, buyOrders[i].maxPrice, current.amount);
-                    buyOrders[i].amount -= current.amount;
-                    sellOrders[sellOrders.length-1].amount = 0;
-                    current = sellOrders[sellOrders.length-1];
-                    fullfilledBuy.push(tempBuy);
-                    delete tempBuy;
+        if(buyOrders.length > 0){
+            uint i = buyOrders.length-1;
+            while(i>=0 && sellOrders[sellOrders.length-1].amount!=0){
+                if(buyOrders[i].maxPrice >= current.minPrice){
+                    if(buyOrders[i].amount <= current.amount){
+                        sellOrders[sellOrders.length-1].amount -= buyOrders[i].amount;
+                        current = sellOrders[sellOrders.length-1];
+                        fullfilledBuy.push(buyOrders[i]);
+                        delete buyOrders[i];
+                        buyOrders.pop();
+                    }else{
+                        BuyOrder memory tempBuy = BuyOrder(buyOrders[i].buyer, buyOrders[i].maxPrice, current.amount);
+                        buyOrders[i].amount -= current.amount;
+                        sellOrders[sellOrders.length-1].amount = 0;
+                        current = sellOrders[sellOrders.length-1];
+                        fullfilledBuy.push(tempBuy);
+                        delete tempBuy;
+                    }
                 }
-            }
-            i--;
+                if(i==0){break;}
+                i--;
 
-        }
-        if(sellOrders[sellOrders.length-1].amount==0){
-            removeSellOrder(sellOrders.length-1);
+            }
+            if(sellOrders[sellOrders.length-1].amount==0){
+                removeSellOrder(sellOrders.length-1);
+            }
         }
     }
 
