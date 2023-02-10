@@ -34,13 +34,13 @@ contract OrderBook{
         _;
     }
 
-    BuyOrder[] buyOrders;
+    BuyOrder[] public buyOrders;
     BuyOrder[] _buyOrders;
-    SellOrder[] sellOrders;
+    SellOrder[] public sellOrders;
     SellOrder[] _sellOrders;
 
-    BuyOrder[] fullfilledBuy;
-    SellOrder[] fullfilledSell;
+    BuyOrder[] public fullfilledBuy;
+    SellOrder[] public fullfilledSell;
 
     event SendBTC(address receiver, uint256 amount);
     event SendDAI(address receiver, uint256 amount);
@@ -296,9 +296,18 @@ contract OrderBook{
             sendDAI(buyOrders[index].buyer, buyOrders[index].amount*buyOrders[index].maxPrice);
             removeBuyOrder(index);
         }
+    
         
     }
 
+
+    function getCountBuyOrder() view external returns(uint){
+        return buyOrders.length;
+    }
+
+    function getCountSellOrder() view external returns(uint){
+        return sellOrders.length;
+    }
     
 
 

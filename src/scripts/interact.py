@@ -51,8 +51,29 @@ def close_sell_order(seller):
     print(tx.events)
     return True
 
+def get_buy_orders(index):
+    order_book = OrderBook[-1]
+    order = order_book.buyOrders(index)
+    return order
+
+def get_sell_orders(index):
+    order_book = OrderBook[-1]
+    order = order_book.sellOrders(index)
+    return order
+
+def get_buy_order_length():
+    order_book = OrderBook[-1]
+    length = order_book.getCountBuyOrder()
+    return length
+
+def get_sell_order_length():
+    order_book = OrderBook[-1]
+    length = order_book.getCountSellOrder()
+    return length
+
+
 def main():
-    for i in range(20):
+    """for i in range(20):
         if random.randint(0, 100) > 50:
             add_buy_order(get_account(random.randint(0,9)), random.randint(1000,25000), random.randint(1,50))
         else:
@@ -62,7 +83,9 @@ def main():
     close_buy_order(get_account(1))
     close_buy_order(get_account(3))
     close_sell_order(get_account(5))
-    close_sell_order(get_account(8))
+    close_sell_order(get_account(8))"""
+    add_buy_order(get_account(random.randint(0,9)), random.randint(1000,25000), random.randint(1,50))
+    print(get_buy_orders(0))
     #add_buy_order(get_account(1), 15000, 1)
     #add_sell_order(get_account(2), 12000, 10)
     #add_buy_order(get_account(3), 10000, 20)
